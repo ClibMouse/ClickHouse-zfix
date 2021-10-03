@@ -1,0 +1,33 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.194.3/containers/docker-existing-docker-compose
+// If you want to run as a non-root user in the container, see .devcontainer/docker-compose.yml.
+{
+	"name": "ClickHouse Development",
+
+	// Update the 'dockerComposeFile' list if you have more compose files or use different names.
+	// The .devcontainer/docker-compose.yml file contains any overrides you need/want to make.
+	"dockerComposeFile": [
+		"docker-compose.yml"
+	],
+
+	// The 'service' property is the name of the service for the container that VS Code should
+	// use. Update this value and .devcontainer/docker-compose.yml to the real service name.
+	"service": "builder",
+	
+	// Set *default* container specific settings.json values on container create.
+	"settings": {},
+	"shutdownAction": "none",
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [],
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Uncomment the next line if you want start specific services in your Docker Compose config.
+	"runServices": ["runner"],
+	"remoteUser": "vscode",
+	"workspaceFolder": "/home/vscode/workspace",
+	"postCreateCommand": "git clone --recursive git@github.ibm.com:ClickHouse/ClickHouse.git /home/vscode/workspace -b ${GIT_BRANCH} || true",
+	"postStartCommand": "git fetch --all || true",
+	"initializeCommand": [".devcontainer/initialize.cmd"]
+}

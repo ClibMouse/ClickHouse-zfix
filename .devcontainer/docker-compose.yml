@@ -1,0 +1,37 @@
+version: '2'
+services:
+  builder:
+    container_name: "Connected_Builder"
+    env_file: 
+      - devcontainer.env 
+      - branch.env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - vscodeWorkspace:/home/vscode/workspace:cached
+      - vscodeExt:/home/vscode/.vscode-server/extensions
+      - vscodeinsidersExt:/home/vscode/.vscode-server-insiders/extensions
+    command: tail -f /dev/null
+  runner:
+    container_name: "Isolated_Runner"
+    env_file: 
+      - devcontainer.env
+    network_mode: "none"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      network: none
+    volumes:
+      - vscodeWorkspace:/home/vscode/workspace:cached
+      - vscodeExt:/home/vscode/.vscode-server/extensions
+      - vscodeinsidersExt:/home/vscode/.vscode-server-insiders/extensions
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    command: tail -f /dev/null
+volumes:
+  vscodeWorkspace:
+  vscodeExt:
+  vscodeinsidersExt:

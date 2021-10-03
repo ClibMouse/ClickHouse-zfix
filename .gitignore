@@ -154,6 +154,11 @@ website/package-lock.json
 /programs/server/metadata
 /programs/server/store
 
+<<<<<<< HEAD
 # temporary test files
 tests/queries/0_stateless/test_*
 tests/queries/0_stateless/*.binary
+=======
+#Dev Environment runtime
+/.devcontainer/branch.env
+>>>>>>> b1e01c8031 (VSCode containerized dev)

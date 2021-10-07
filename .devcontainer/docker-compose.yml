@@ -15,6 +15,8 @@ services:
     command: tail -f /dev/null
   runner:
     container_name: "Isolated_Runner"
+    depends_on:
+      - builder
     env_file: 
       - devcontainer.env
     network_mode: "none"

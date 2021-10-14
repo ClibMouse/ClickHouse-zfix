@@ -13,7 +13,6 @@ services:
       - vscodeWorkspace:/home/vscode/workspace:cached
       - vscodeExt:/home/vscode/.vscode-server/extensions
       - vscodeinsidersExt:/home/vscode/.vscode-server-insiders/extensions
-    command: tail -f /dev/null
   runner:
     container_name: "Isolated_Runner"
     privileged: true
@@ -34,7 +33,6 @@ services:
       - SYS_PTRACE
     security_opt:
       - seccomp:unconfined
-    command: tail -f /dev/null
 volumes:
   vscodeWorkspace:
   vscodeExt:

@@ -2,6 +2,7 @@ version: '2'
 services:
   builder:
     container_name: "Connected_Builder"
+    privileged: true
     env_file: 
       - devcontainer.env 
       - branch.env
@@ -15,6 +16,7 @@ services:
     command: tail -f /dev/null
   runner:
     container_name: "Isolated_Runner"
+    privileged: true
     depends_on:
       - builder
     env_file: 

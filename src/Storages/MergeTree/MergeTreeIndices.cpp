@@ -1,9 +1,9 @@
 #include <Storages/MergeTree/MergeTreeIndices.h>
+#include <Storages/MergeTree/GinIndexStore.h>
 #include <Parsers/parseQuery.h>
 #include <Parsers/ParserCreateQuery.h>
 #include <IO/WriteHelpers.h>
 #include <IO/ReadHelpers.h>
-
 #include <numeric>
 
 #include <boost/algorithm/string.hpp>
@@ -101,6 +101,9 @@ MergeTreeIndexFactory::MergeTreeIndexFactory()
 
     registerCreator("hypothesis", hypothesisIndexCreator);
     registerValidator("hypothesis", hypothesisIndexValidator);
+
+    registerCreator("gin", ginIndexCreator);
+    registerValidator("gin", ginIndexValidator);
 }
 
 MergeTreeIndexFactory & MergeTreeIndexFactory::instance()

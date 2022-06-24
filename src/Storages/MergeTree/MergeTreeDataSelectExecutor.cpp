@@ -8,6 +8,7 @@
 #include <Storages/MergeTree/MergeTreeIndexReader.h>
 #include <Storages/MergeTree/KeyCondition.h>
 #include <Storages/MergeTree/MergeTreeDataPartUUID.h>
+#include <Storages/MergeTree/MergeTreeIndexGin.h>
 #include <Storages/ReadInOrderOptimizer.h>
 #include <Parsers/ASTIdentifier.h>
 #include <Parsers/ASTLiteral.h>
@@ -1629,6 +1630,14 @@ MarkRanges MergeTreeDataSelectExecutor::filterMarksUsingIndex(
     /// this variable is stored to avoid reading the same granule twice.
     MergeTreeIndexGranulePtr granule = nullptr;
     size_t last_index_mark = 0;
+
+    PostingsCacheForStore cache_in_store;
+
+    if (dynamic_cast<const MergeTreeIndexGinFilter *>(&*index_helper) != nullptr)
+    {
+        cache_in_store.store = GinIndexStoreFactory::instance().get(index_helper->getFileName(), part->volume->getDisk(), part->getFullRelativePath());
+    }
+
     for (size_t i = 0; i < ranges.size(); ++i)
     {
         const MarkRange & index_range = index_ranges[i];
@@ -1642,8 +1651,15 @@ MarkRanges MergeTreeDataSelectExecutor::filterMarksUsingIndex(
         {
             if (index_mark != index_range.begin || !granule || last_index_mark != index_range.begin)
                 granule = reader.read();
+            auto gin_filter_condition = dynamic_cast<const MergeTreeConditionGinFilter *>(&*condition);
 
-            if (!condition->mayBeTrueOnGranule(granule))
+            bool result{false};
+            if(!gin_filter_condition)
+                result = condition->mayBeTrueOnGranule(granule);
+            else
+                result = gin_filter_condition->mayBeTrueOnGranuleInPart(granule, cache_in_store);
+
+            if (!result)
             {
                 ++granules_dropped;
                 continue;

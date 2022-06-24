@@ -1,6 +1,6 @@
 #include <Storages/MergeTree/MergeTreeDataPartWriterOnDisk.h>
+#include <Storages/MergeTree/MergeTreeIndexGin.h>
 #include <Common/MemoryTrackerBlockerInThread.h>
-
 #include <utility>
 #include "IO/WriteBufferFromFileDecorator.h"
 
@@ -173,7 +173,16 @@ void MergeTreeDataPartWriterOnDisk::initSkipIndices()
                         stream_name, index_helper->getSerializedFileExtension(),
                         stream_name, marks_file_extension,
                         default_codec, settings.max_compress_block_size, settings.query_write_settings));
-        skip_indices_aggregators.push_back(index_helper->createIndexAggregator());
+
+
+        GinIndexStorePtr store = nullptr;
+        if(dynamic_cast<const MergeTreeIndexGinFilter *>(&*index_helper) != nullptr)
+        {
+            store = std::make_shared<GinIndexStore>(stream_name, data_part->volume->getDisk(), part_path, storage.getSettings()->max_digestion_size_per_segment);
+            gin_index_stores[stream_name] = store;
+        }
+        skip_indices_aggregators.push_back(index_helper->createIndexAggregatorForPart(store));
+
         skip_index_accumulated_marks.push_back(0);
     }
 }
@@ -226,6 +235,19 @@ void MergeTreeDataPartWriterOnDisk::calculateAndSerializeSkipIndices(const Block
     {
         const auto index_helper = skip_indices[i];
         auto & stream = *skip_indices_streams[i];
+
+        GinIndexStorePtr store = nullptr;
+        if(dynamic_cast<const MergeTreeIndexGinFilter *>(&*index_helper) != nullptr)
+        {
+            String stream_name = index_helper->getFileName();
+            auto it = gin_index_stores.find(stream_name);
+            if(it == gin_index_stores.cend())
+            {
+                throw Exception("Index '" + stream_name + "' does not exist", ErrorCodes::LOGICAL_ERROR);
+            }
+            store = it->second;
+        }
+    
         for (const auto & granule : granules_to_write)
         {
             if (skip_index_accumulated_marks[i] == index_helper->index.granularity)
@@ -236,7 +258,7 @@ void MergeTreeDataPartWriterOnDisk::calculateAndSerializeSkipIndices(const Block
 
             if (skip_indices_aggregators[i]->empty() && granule.mark_on_start)
             {
-                skip_indices_aggregators[i] = index_helper->createIndexAggregator();
+                skip_indices_aggregators[i] = index_helper->createIndexAggregatorForPart(store);
 
                 if (stream.compressed.offset() >= settings.min_compress_block_size)
                     stream.compressed.next();
@@ -319,7 +341,11 @@ void MergeTreeDataPartWriterOnDisk::finishSkipIndicesSerialization(bool sync)
         if (sync)
             stream->sync();
     }
-
+    for (auto & store: gin_index_stores)
+    {
+        store.second->finalize();
+    }
+    gin_index_stores.clear();
     skip_indices_streams.clear();
     skip_indices_aggregators.clear();
     skip_index_accumulated_marks.clear();

@@ -145,6 +145,12 @@ public:
         size_t buf_size,
         const WriteSettings & settings) override;
 
+    std::unique_ptr<WriteBufferFromFileBase> writeFile(
+        const String & path,
+        size_t buf_size,
+        DB::WriteMode mode,
+        const WriteSettings & settings) override;
+
     void removeFile(const String & name) override;
     void removeFileIfExists(const String & name) override;
     void removeRecursive() override;

@@ -1,9 +1,11 @@
 #pragma once
 #include <IO/ReadSettings.h>
+#include <IO/WriteSettings.h>
 #include <base/types.h>
 #include <Core/NamesAndTypes.h>
 #include <Interpreters/TransactionVersionMetadata.h>
 #include <optional>
+#include <Disks/WriteMode.h>
 
 namespace DB
 {
@@ -227,6 +229,7 @@ public:
     virtual void createProjection(const std::string & name) = 0;
 
     virtual std::unique_ptr<WriteBufferFromFileBase> writeFile(const String & name, size_t buf_size, const WriteSettings & settings) = 0;
+    virtual std::unique_ptr<WriteBufferFromFileBase> writeFile(const String & name, size_t buf_size, WriteMode mode, const WriteSettings & settings) = 0;
 
     virtual void removeFile(const String & name) = 0;
     virtual void removeFileIfExists(const String & name) = 0;

@@ -836,9 +836,6 @@ std::unique_ptr<WriteBufferFromFileBase> DataPartStorageBuilderOnDisk::writeFile
     size_t buf_size,
     const WriteSettings & settings)
 {
-<<<<<<< HEAD
-    return transaction->writeFile(fs::path(root_path) / part_dir / name, buf_size, WriteMode::Rewrite, settings, /* autocommit = */ false);
-=======
     return writeFile(name, buf_size, WriteMode::Rewrite, settings);
 }
 
@@ -848,8 +845,7 @@ std::unique_ptr<WriteBufferFromFileBase> DataPartStorageBuilderOnDisk::writeFile
     WriteMode mode,
     const WriteSettings & settings)
 {
-    return volume->getDisk()->writeFile(fs::path(root_path) / part_dir / name, buf_size, mode, settings);
->>>>>>> Use DataPartStorage in GinIndexStore
+    return transaction->writeFile(fs::path(root_path) / part_dir / name, buf_size, mode, settings, /* autocommit = */ false);
 }
 
 void DataPartStorageBuilderOnDisk::removeFile(const String & name)

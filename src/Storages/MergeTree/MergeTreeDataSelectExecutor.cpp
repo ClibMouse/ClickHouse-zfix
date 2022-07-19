@@ -1651,7 +1651,7 @@ MarkRanges MergeTreeDataSelectExecutor::filterMarksUsingIndex(
         {
             if (index_mark != index_range.begin || !granule || last_index_mark != index_range.begin)
                 granule = reader.read();
-            auto gin_filter_condition = dynamic_cast<const MergeTreeConditionGinFilter *>(&*condition);
+            const auto * gin_filter_condition = dynamic_cast<const MergeTreeConditionGinFilter *>(&*condition);
 
             bool result{false};
             if (!gin_filter_condition)

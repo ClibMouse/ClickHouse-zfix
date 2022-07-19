@@ -146,7 +146,7 @@ public:
         const WriteSettings & settings) override;
 
     std::unique_ptr<WriteBufferFromFileBase> writeFile(
-        const String & path,
+        const String & name,
         size_t buf_size,
         DB::WriteMode mode,
         const WriteSettings & settings) override;

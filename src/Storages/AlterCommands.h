@@ -210,6 +210,9 @@ public:
     /// empty. If some TTL changes happened than, depending on materialize_ttl
     /// additional mutation command (MATERIALIZE_TTL) will be returned.
     MutationCommands getMutationCommands(StorageInMemoryMetadata metadata, bool materialize_ttl, ContextPtr context) const;
+
+    /// Check if commands have any inverted index
+    bool hasInvertedIndex(const StorageInMemoryMetadata & metadata, ContextPtr context) const;
 };
 
 }

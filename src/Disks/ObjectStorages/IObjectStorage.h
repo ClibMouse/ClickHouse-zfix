@@ -17,7 +17,6 @@
 #include <Disks/ObjectStorages/StoredObject.h>
 #include <Disks/DiskType.h>
 #include <Common/ThreadPool.h>
-#include <Common/FileCache.h>
 #include <Disks/WriteMode.h>
 
 
@@ -131,7 +130,7 @@ public:
     /// Path to directory with objects cache
     virtual const std::string & getCacheBasePath() const;
 
-    static AsynchronousReaderPtr getThreadPoolReader();
+    static IAsynchronousReader & getThreadPoolReader();
 
     static ThreadPool & getThreadPoolWriter();
 

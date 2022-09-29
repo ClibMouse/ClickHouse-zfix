@@ -236,5 +236,9 @@ void hypothesisIndexValidator(const IndexDescription & index, bool attach);
 
 MergeTreeIndexPtr ginIndexCreator(const IndexDescription& index);
 void ginIndexValidator(const IndexDescription& index, bool attach);
+#ifdef ENABLE_ANNOY
+MergeTreeIndexPtr annoyIndexCreator(const IndexDescription & index);
+void annoyIndexValidator(const IndexDescription & index, bool attach);
+#endif
 
 }

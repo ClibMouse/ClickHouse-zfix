@@ -100,20 +100,19 @@ namespace
     ReadWriteBufferFromHTTP::HTTPHeaderEntries getHeaders(const ReadWriteBufferFromHTTP::HTTPHeaderEntries & headers_)
     {
         ReadWriteBufferFromHTTP::HTTPHeaderEntries headers(headers_.begin(), headers_.end());
-        // Propagate OpenTelemetry trace context, if any, downstream.
-        if (CurrentThread::isInitialized())
-        {
-            const auto & thread_trace_context = CurrentThread::get().thread_trace_context;
-            if (thread_trace_context.trace_id != UUID())
-            {
-                headers.emplace_back("traceparent", thread_trace_context.composeTraceparentHeader());
 
-                if (!thread_trace_context.tracestate.empty())
-                {
-                    headers.emplace_back("tracestate", thread_trace_context.tracestate);
-                }
+        // Propagate OpenTelemetry trace context, if any, downstream.
+        const auto &current_trace_context = OpenTelemetry::CurrentContext();
+        if (current_trace_context.isTraceEnabled())
+        {
+            headers.emplace_back("traceparent", current_trace_context.composeTraceparentHeader());
+
+            if (!current_trace_context.tracestate.empty())
+            {
+                headers.emplace_back("tracestate", current_trace_context.tracestate);
             }
         }
+
         return headers;
     }
 
@@ -352,7 +351,7 @@ namespace
                                 return wrapReadBufferWithCompressionMethod(
                                     std::make_unique<ParallelReadBuffer>(
                                         std::move(read_buffer_factory),
-                                        threadPoolCallbackRunner(IOThreadPool::get()),
+                                        threadPoolCallbackRunner<void>(IOThreadPool::get(), "URLParallelRead"),
                                         download_threads),
                                     compression_method,
                                     settings.zstd_window_log_max);
@@ -1019,7 +1018,7 @@ ASTs::iterator StorageURL::collectHeaders(
                 if (arg_value.getType() != Field::Types::Which::String)
                     throw Exception(ErrorCodes::BAD_ARGUMENTS, "Expected string as header value");
 
-                configuration.headers.emplace_back(arg_name, arg_value);
+                configuration.headers.emplace_back(arg_name, arg_value.safeGet<String>());
             }
 
             headers_it = arg_it;
@@ -1097,10 +1096,9 @@ void registerStorageURL(StorageFactory & factory)
             ReadWriteBufferFromHTTP::HTTPHeaderEntries headers;
             for (const auto & [header, value] : configuration.headers)
             {
-                auto value_literal = value.safeGet<String>();
                 if (header == "Range")
                     throw Exception(ErrorCodes::BAD_ARGUMENTS, "Range headers are not allowed");
-                headers.emplace_back(std::make_pair(header, value_literal));
+                headers.emplace_back(header, value);
             }
 
             ASTPtr partition_by;

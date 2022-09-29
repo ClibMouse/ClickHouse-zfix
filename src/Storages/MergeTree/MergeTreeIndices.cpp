@@ -104,6 +104,10 @@ MergeTreeIndexFactory::MergeTreeIndexFactory()
 
     registerCreator(GinFilter::FilterName, ginIndexCreator);
     registerValidator(GinFilter::FilterName, ginIndexValidator);
+#ifdef ENABLE_ANNOY
+    registerCreator("annoy", annoyIndexCreator);
+    registerValidator("annoy", annoyIndexValidator);
+#endif
 }
 
 MergeTreeIndexFactory & MergeTreeIndexFactory::instance()

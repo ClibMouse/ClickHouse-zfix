@@ -217,7 +217,7 @@ void MergeTreeDataPartWriterOnDisk::initSkipIndices()
             store = std::make_shared<GinIndexStore>(stream_name, data_part->data_part_storage, data_part_storage_builder, storage.getSettings()->max_digestion_size_per_segment);
             gin_index_stores[stream_name] = store;
         }
-        skip_indices_aggregators.push_back(index_helper->createIndexAggregator());
+        skip_indices_aggregators.push_back(index_helper->createIndexAggregatorForPart(store));
         skip_index_accumulated_marks.push_back(0);
     }
 }

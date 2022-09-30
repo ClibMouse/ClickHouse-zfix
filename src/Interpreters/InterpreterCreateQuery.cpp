@@ -681,7 +681,7 @@ InterpreterCreateQuery::TableProperties InterpreterCreateQuery::getTableProperti
                             "Experimental Inverted Index feature is not enabled (the setting 'allow_experimental_inverted_index')",
                             ErrorCodes::SUPPORT_IS_DISABLED);
                 }
-                if (properties.indices.back().type == "annoy" && !getContext()->getSettingsRef().allow_experimental_annoy_index)
+                if (index_desc.type == "annoy" && !getContext()->getSettingsRef().allow_experimental_annoy_index)
                     throw Exception("Annoy index is disabled. Turn on allow_experimental_annoy_index", ErrorCodes::INCORRECT_QUERY);
 
                 properties.indices.push_back(index_desc);

@@ -124,49 +124,24 @@ bool ToDecimal::convertImpl(String & out, IParser::Pos & pos)
     const String fn_name = getKQLFunctionName(pos);
     if (fn_name.empty())
         return false;
-
     ++pos;
     String res;
-    int scale = 0;
-    int precision;
-    
-    if (pos->type == TokenType::QuotedIdentifier || pos->type == TokenType::StringLiteral)
+    if (pos->type == TokenType::QuotedIdentifier || pos->type == TokenType::StringLiteral || pos->type == TokenType::Number)     
     {
-        res =  String(pos->begin+1, pos->end -1);
-        ++pos;
-        precision = 34;
+    --pos;
+    res = getArgument(fn_name, pos);
+    String scale = std::format("if(position({0}::String,'e') = 0 , ( countSubstrings({0}::String, '.') = 1 ? length(substr({0}::String, position({0}::String,'.') + 1)) : 0 ) , toUInt64(multiIf((position({0}::String,'e+') as x) >0 , substr({0}::String,x+2) ,  (position({0}::String,'e-')  as y )>0 , substr({0}::String,y+2)  ,  position({0}::String,'e-') = 0 AND position({0}::String,'e+') =0 AND position({0}::String,'e')>0, substr({0}::String,position({0}::String,'e')+1) , 0::String)))", res); 
+    out = std::format("toTypeName({0}) = 'String' OR  toTypeName({0}) = 'FixedString' ? toDecimal128OrNull({0}::String , abs(34 - ({1}::UInt8))) : toDecimal128OrNull({0}::String , abs(17 - ({1}::UInt8)))", res, scale); 
     }
     else
     {
-        res = getConvertedArgument(fn_name, pos);
-        precision = 17;
-    }
-    static const std::regex expr{"^[0-9]+e[+-]?[0-9]+"};
-    bool is_string = std::any_of(res.begin(), res.end(), ::isalpha) && !(std::regex_match(res, expr));
-     
-    if (is_string)
+    --pos;
+    res = getArgument(fn_name, pos);
+    if( Poco::toUpper(res) == "NULL")
         out = "NULL";
-    else if (std::regex_match(res, expr))
-    {
-        auto exponential_pos = res.find("e");
-        if (res[exponential_pos + 1] == '+' || res[exponential_pos + 1] == '-')
-            scale = std::stoi(res.substr(exponential_pos + 2, res.length()));
-        else
-            scale = std::stoi(res.substr(exponential_pos + 1, res.length()));
-
-        out = std::format("toDecimal128({}::String,{})", res, scale);
-    }
     else
-    {
-        auto dot_pos = res.find(".");
-        if (dot_pos != String::npos)
-            scale = (precision - (res.substr(0,dot_pos-1)).length()) > 0 ? precision - (res.substr(0,dot_pos-1)).length() : 0;
-        if (scale < 0)
-            out = "NULL";
-        else
-            out = std::format("toDecimal128({}::String,{})", res, scale);
+        out = std::format("toTypeName({0}) = 'String' OR  toTypeName({0}) = 'FixedString' ? toDecimal128OrNull({0}::String , 17) : toDecimal128OrNull({0}::String , 17)", res);
     }
-
     return true;
 }
 

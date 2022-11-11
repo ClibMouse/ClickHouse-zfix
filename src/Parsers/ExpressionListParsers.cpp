@@ -354,6 +354,14 @@ bool ParserLeftAssociativeBinaryOperatorList::parseImpl(Pos & pos, ASTPtr & node
             exp_list->children.push_back(node);
             exp_list->children.push_back(elem);
 
+            /// enable to use [] for kql_array_sort
+            if (it[0] == "["sv && function->name =="arrayElement")
+            {
+                auto tupleNode = node->as<ASTFunction>();
+                if (tupleNode && (tupleNode->name == "kql_array_sort_asc" || tupleNode->name == "kql_array_sort_desc"))
+                    function->name = "tupleElement";
+            }
+
             if (comparison_expression && subquery_function_type != SubqueryFunctionType::NONE && !modifyAST(function, subquery_function_type))
                 return false;
 

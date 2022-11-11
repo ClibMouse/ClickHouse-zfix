@@ -168,3 +168,4 @@ print zip(dynamic([1,3,5]), dynamic([2,4,6]));
 print zip(dynamic(['Darth','Master']), dynamic(['Vader','Yoda']), dynamic(['has a suit','doesn\'t have a suit']));
 print zip(dynamic([1,2,3]), dynamic([10,20]));
 print zip(dynamic([]), dynamic([1,2,3]));
+print zip(repeat(1,4), repeat(2,4));

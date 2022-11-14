@@ -118,6 +118,7 @@ struct BinaryOperationTraits
 {
     using T0 = typename LeftDataType::FieldType;
     using T1 = typename RightDataType::FieldType;
+
 private: /// it's not correct for Decimal
     using Op = Operation<T0, T1>;
 
@@ -194,8 +195,6 @@ template <typename A, typename B, typename Op, typename OpResultType = typename 
 struct BinaryOperation
 {
     using ResultType = OpResultType;
-    static const constexpr bool allow_fixed_string = false;
-    static const constexpr bool allow_string_integer = false;
 
     template <OpCase op_case>
     static void NO_INLINE process(const A * __restrict a, const B * __restrict b, ResultType * __restrict c, size_t size, const NullMap * right_nullmap = nullptr)
@@ -620,6 +619,8 @@ class FunctionBinaryArithmetic : public IFunction
 {
     static constexpr const bool is_plus = IsOperation<Op>::plus;
     static constexpr const bool is_minus = IsOperation<Op>::minus;
+    static constexpr const bool is_modulo = IsOperation<Op>::modulo;
+    static constexpr const bool is_modulo_or_zero = IsOperation<Op>::modulo_or_zero;
     static constexpr const bool is_multiply = IsOperation<Op>::multiply;
     static constexpr const bool is_division = IsOperation<Op>::division;
 
@@ -1143,6 +1144,7 @@ public:
         {
             using LeftDataType = std::decay_t<decltype(left)>;
             using RightDataType = std::decay_t<decltype(right)>;
+            using ConcreteOp = Op<LeftDataType, RightDataType>;
 
             if constexpr ((std::is_same_v<DataTypeFixedString, LeftDataType> || std::is_same_v<DataTypeString, LeftDataType>) ||
                 (std::is_same_v<DataTypeFixedString, RightDataType> || std::is_same_v<DataTypeString, RightDataType>))
@@ -1150,7 +1152,7 @@ public:
                 if constexpr (std::is_same_v<DataTypeFixedString, LeftDataType> &&
                               std::is_same_v<DataTypeFixedString, RightDataType>)
                 {
-                    if constexpr (!Op<DataTypeFixedString, DataTypeFixedString>::allow_fixed_string)
+                    if constexpr (!ConcreteOp::allow_fixed_string)
                         return false;
                     else
                     {
@@ -1162,7 +1164,7 @@ public:
                     }
                 }
 
-                if constexpr (!Op<LeftDataType, RightDataType>::allow_string_integer)
+                if constexpr (!ConcreteOp::allow_string_integer)
                     return false;
                 else if constexpr (!IsIntegral<RightDataType>)
                     return false;
@@ -1596,6 +1598,7 @@ public:
         {
             using LeftDataType = std::decay_t<decltype(left)>;
             using RightDataType = std::decay_t<decltype(right)>;
+            using ConcreteOp = Op<LeftDataType, RightDataType>;
 
             if constexpr ((std::is_same_v<DataTypeFixedString, LeftDataType> || std::is_same_v<DataTypeString, LeftDataType>) ||
                           (std::is_same_v<DataTypeFixedString, RightDataType> || std::is_same_v<DataTypeString, RightDataType>))
@@ -1603,13 +1606,13 @@ public:
                 if constexpr (std::is_same_v<DataTypeFixedString, LeftDataType> &&
                               std::is_same_v<DataTypeFixedString, RightDataType>)
                 {
-                    if constexpr (!Op<DataTypeFixedString, DataTypeFixedString>::allow_fixed_string)
+                    if constexpr (!ConcreteOp::allow_fixed_string)
                         return false;
                     else
                         return (res = executeFixedString(arguments)) != nullptr;
                 }
 
-                if constexpr (!Op<LeftDataType, RightDataType>::allow_string_integer)
+                if constexpr (!ConcreteOp::allow_string_integer)
                     return false;
                 else if constexpr (!IsIntegral<RightDataType>)
                     return false;

@@ -138,7 +138,7 @@ bool ParserKQLMakeSeries :: parseFromToStepClause(FromToStepClause & from_to_ste
     ++step_pos;
     from_to_step.step_str = String(step_pos->begin, end_pos->end);
 
-    if (String(step_pos->begin, step_pos->end) == "time" || String(step_pos->begin, step_pos->end) == "timespan" || ParserKQLDateTypeTimespan().parseConstKQLTimespan(from_to_step.step_str))
+    if (String(step_pos->begin, step_pos->end) == "time" || String(step_pos->begin, step_pos->end) == "timespan" || ParserKQLDataTypeTimespan::performParsing(from_to_step.step_str))
     {
         from_to_step.is_timespan = true;
         from_to_step.step = std::stod(getExprFromToken(from_to_step.step_str, pos.max_depth));
@@ -342,8 +342,6 @@ bool ParserKQLMakeSeries :: parseImpl(Pos & pos, ASTPtr & node, Expected & expec
     auto & subquery_columns = kql_make_series.subquery_columns;
     auto & axis_column = kql_make_series.axis_column;
     auto & group_expression = kql_make_series.group_expression;
-
-    ParserKQLDateTypeTimespan time_span;
 
    //const auto make_series_parameters = getMakeSeriesParameters(pos);
 

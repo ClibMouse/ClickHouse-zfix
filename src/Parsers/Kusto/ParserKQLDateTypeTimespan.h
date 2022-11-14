@@ -5,34 +5,18 @@
 
 namespace DB
 {
-
-class ParserKQLDateTypeTimespan : public ParserKQLBase
+class ParserKQLDataTypeTimespan : public ParserKQLBase
 {
 public:
-    enum class KQLTimespanUint: uint8_t
-    {
-        day,
-        hour,
-        minute,
-        second,
-        millisec,
-        microsec,
-        nanosec,
-        tick
-    };
-    bool parseConstKQLTimespan(const String &text);
-    double toSeconds();
-    KQLTimespanUint getTimespanUnit(const String & text);
-    double getTimespan(const String & text);
+    static std::optional<Int64> performParsing(const String & expression);
+    std::optional<Int64> retrieveResult() { return std::exchange(result, {}); }
 
 protected:
     const char * getName() const override { return "KQLDateTypeTimespan"; }
     bool parseImpl(Pos & pos, ASTPtr & node, Expected & expected) override;
 
 private:
-    double time_span;
-    KQLTimespanUint time_span_unit;
+    std::optional<Int64> result;
 };
 
 }
-

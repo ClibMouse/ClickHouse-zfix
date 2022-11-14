@@ -10,6 +10,7 @@
 #include <Core/Block.h>
 #include <Core/ColumnNumbers.h>
 #include <Core/callOnTypeIndex.h>
+#include <Interpreters/Context_fwd.h>
 
 
 namespace DB
@@ -174,4 +175,7 @@ struct NullPresence
 NullPresence getNullPresense(const ColumnsWithTypeAndName & args);
 
 bool isDecimalOrNullableDecimal(const DataTypePtr & type);
+
+std::pair<ColumnPtr, DataTypePtr> executeFunctionCall(
+    const ContextPtr & context, const std::string & name, const ColumnsWithTypeAndName & arguments, size_t input_rows_count);
 }

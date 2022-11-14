@@ -6,6 +6,7 @@
 #include <Parsers/Kusto/ParserKQLDateTypeTimespan.h>
 #include <Parsers/Kusto/ParserKQLQuery.h>
 #include <Parsers/Kusto/ParserKQLStatement.h>
+#include <Parsers/Kusto/Utilities.h>
 #include <Parsers/ParserSetQuery.h>
 
 #include <format>
@@ -177,30 +178,29 @@ bool DatatypeString::convertImpl(String & out, IParser::Pos & pos)
 
 bool DatatypeTimespan::convertImpl(String & out, IParser::Pos & pos)
 {
-    ParserKQLDateTypeTimespan time_span;
-    ASTPtr node;
-    Expected expected;
-    bool sign = false;
-
-    const String fn_name = getKQLFunctionName(pos);
+    const auto fn_name = getKQLFunctionName(pos);
     if (fn_name.empty())
         return false;
-    ++pos;
-    if (pos->type == TokenType::Minus)
+
+    const auto argument = std::invoke([&fn_name, &pos]
     {
-        sign = true;
         ++pos;
-    }
-    if (time_span.parse(pos, node, expected))
-    {
-        if (sign)
-            out = std::format("-{}::Float64", time_span.toSeconds());
-        else
-            out = std::format("{}::Float64", time_span.toSeconds());
-        ++pos;
-    }
+        if (pos->type == TokenType::QuotedIdentifier || pos->type == TokenType::StringLiteral)
+        {
+            auto result = extractTokenWithoutQuotes(pos);
+            ++pos;
+            return result;
+        }
+        
+        --pos;
+        return getArgument(fn_name, pos, ArgumentState::Raw);
+    });
+
+    if (const auto ticks = ParserKQLDataTypeTimespan::performParsing(argument))
+        out = std::format("toIntervalNanosecond({})", *ticks * 100);
     else
-        throw Exception("Not a correct timespan expression: " + fn_name, ErrorCodes::BAD_ARGUMENTS);
+        throw Exception(ErrorCodes::BAD_ARGUMENTS, "Not a correct timespan expression: {}", fn_name);
+        
     return true;
 }
 

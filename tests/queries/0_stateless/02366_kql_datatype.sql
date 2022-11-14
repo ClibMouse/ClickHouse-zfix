@@ -44,6 +44,7 @@ print '-- guid'
 print guid(74be27de-1e4e-49d9-b579-fe0b331d3642);
 print guid(null);
 print '-- timespan (time)';
+print timespan(null);
 print timespan(2d); --              2 days
 print timespan(1.5h); -- 	        1.5 hour
 print timespan(30m); -- 	        30 minutes
@@ -54,6 +55,7 @@ print timespan(10microsecond); -- 	10 microseconds
 print timespan(1tick); --           100 nanoseconds
 print timespan(1.5h) / timespan(30m);
 print timespan('12.23:12:23') / timespan(1s);
+print (timespan(1.5d) / timespan(0.6d)) * timespan(0.6d);
 print '-- null';
 print isnull(null);
 print bool(null), int(null), long(null), real(null), double(null);
@@ -99,8 +101,6 @@ print tostring(null) == '';
 print '-- todatetime()';
 print todatetime("2015-12-24") == datetime(2015-12-24);
 print todatetime('abc') == null;
-print '-- make_timespan()';
-print v1=make_timespan(1,12), v2=make_timespan(1,12,30), v3=make_timespan(1,12,30,55.123);
 print '-- totimespan()';
 print totimespan(1tick);
 print totimespan('0.00:01:00');

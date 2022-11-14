@@ -314,12 +314,13 @@ String IParserKQLFunction::getExpression(IParser::Pos & pos)
                 }
                 --pos;
             }
-            ParserKQLDateTypeTimespan time_span;
+            
             ASTPtr node;
             Expected expected;
-
-            if (time_span.parse(pos, node, expected))
-                arg = boost::lexical_cast<std::string>(time_span.toSeconds());
+            ParserKQLDataTypeTimespan timespan_parser;
+            timespan_parser.parse(pos, node, expected);
+            if (const auto ticks = timespan_parser.retrieveResult())
+                arg = std::format("toIntervalNanosecond({})", *ticks * 100);
         }
     }
     else if (pos->type == TokenType::QuotedIdentifier)
@@ -449,5 +450,4 @@ String IParserKQLFunction::ArraySortHelper(String & out,IParser::Pos & pos, bool
     out += " )";
     return out;
 }
-
 }
